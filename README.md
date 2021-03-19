@@ -1,2 +1,0 @@
-# securechat
-securechat
