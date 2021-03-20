@@ -1,0 +1,5 @@
+to do:
+
+notify when a user joined / left (in the message div)
+on disconnect: remove user from db userlist
+gerer la deco de l'admin / gerer les msg vers une room detruite
