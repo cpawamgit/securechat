@@ -5,25 +5,23 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const http = require('http').Server(app);
-const env = require('./env.json')
 const io = require("socket.io")(http, {
     cors: {
-        origin: env.prod.host,
+        origin: "http://localhost:3000",
         methods: ["GET", "POST"]
     }
 });
-const port = process.env.PORT || env.prod.port;
+const port = process.env.PORT || 3002;
 ////////////////////////
-/////  BCRYPT  /////////
+///////BCRYPT///////////
 ////////////////////////
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 ////////////////////////
-///////  DB  ///////////
+/////////DB/////////////
 ////////////////////////
 const mongoose = require('mongoose');
 const Room = require('./roomschema');
-const { endianness } = require('os');
 mongoose.connect('mongodb://localhost/rooms', { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('error', (err) => { console.log(err) });
