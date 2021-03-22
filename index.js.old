@@ -10,14 +10,12 @@ const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
 const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
 
 const http = require('https').Server({key: privKey, cert: cert}, app);
-const io = require("socket.io")(http, 
-
-{
-cors: {
-    origin: "https://server1.cyrilmorin.fr",
-    methods: ["GET", "POST"],
-  }
-})
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "https://server1.cyrilmorin.fr/",
+        methods: ["GET", "POST"]
+    }
+});
 const port = process.env.PORT || 3002;
 ////////////////////////
 ///////BCRYPT///////////
