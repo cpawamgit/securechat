@@ -6,7 +6,8 @@ const roomSchema = new Schema({
     roomUsers: Array,
     roomAccess: String,
     roomPassword: String,
-    roomOwner: String
+    roomOwner: String,
+    blockedUsers: Array
 })
 
 let room = module.exports =  mongoose.model('room', roomSchema);
