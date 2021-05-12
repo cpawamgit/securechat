@@ -109,7 +109,7 @@ io.on('connection', (socket) => {
         Room.findOne({ roomName: userData.roomName }, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
-            } else if (Object.keys(room).length === 0) {
+            } else if (room === null || Object.keys(room).length === 0) {
                 socket.emit('error', 'This room does not exist anymore')
             } else if (room.roomAccess !== 'free') {
                 socket.emit('error', 'BAD REQUEST')
@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
         Room.findOne({ roomName: userData.roomName }, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
-            } else if (Object.keys(room).length === 0) {
+            } else if (room === null || Object.keys(room).length === 0) {
                 socket.emit('error', 'This room does not exist anymore')
             } else if (room.roomAccess !== 'password') {
                 socket.emit('error', 'BAD REQUEST')
@@ -135,7 +135,7 @@ io.on('connection', (socket) => {
         Room.findOne({ roomName: userData.roomName }, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
-            } else if (Object.keys(room).length === 0) {
+            } else if (room === null || Object.keys(room).length === 0) {
                 socket.emit('error', 'This room does not exist anymore')
             } else if (room.roomAccess !== 'request') {
                 socket.emit('error', 'BAD REQUEST')
@@ -156,6 +156,8 @@ io.on('connection', (socket) => {
         function deny(user) {
             let userSocket = requestList.find(item => item.id === user.id)
             userSocket.emit('access denied', 'The admin denied you access to the room')
+            let tmp = requestList.filter(item => item.id !== userSocket.id)
+            requestList = [...tmp]
         }
         checkIfAdmin(user.roomName, socket.id, user, deny)
     })
@@ -163,14 +165,13 @@ io.on('connection', (socket) => {
         Room.findOne({ roomName: msg.roomName }, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
-            } else if (Object.keys(room).length === 0) {
+            } else if (room === null || Object.keys(room).length === 0) {
                 socket.emit('error', 'This room does not exist anymore')
             } else {
                 const userlst = room.roomUsers.map(item => item.id);
                 let check = userlst.includes(socket.id);
                 if (check) {
                     msg.msg.forEach(item => {
-                        console.log(msg.sender)
                         user = room.roomUsers.find((elem) => elem.nickName === item.user)
                         socket.to(user.id).emit('chat message received',
                             { msg: item.msg, sender: msg.sender })
@@ -179,13 +180,28 @@ io.on('connection', (socket) => {
             }
         })
     })
+    socket.on('disconnecting', () => {
+        Room.findOne({roomName: Array.from(socket.rooms)[1]}, (err, room) => {
+            if (err) {
+                socket.emit('error', 'server error')
+            } else if (room === null || Object.keys(room).length === 0) {
+                socket.emit('error', 'This room does not exist anymore')
+            } else {
+                if (room.roomOwner === socket.id){
+                    deleteRoom(room.roomName)
+                } else {
+                    deleteUser(room.roomName, room.roomUsers, socket.id)
+                }
+            }
+        })
+    })
 })
 
 function checkIfAdmin(roomName, id, user, action) {
-    Room.findOne({roomName: roomName}, (err, room) => {
+    Room.findOne({ roomName: roomName }, (err, room) => {
         if (err) {
             socket.emit('error', 'server error')
-        } else if (Object.keys(room).length === 0) {
+        } else if (room === null || Object.keys(room).length === 0) {
             socket.emit('error', 'This room does not exist anymore')
         } else if (room.roomOwner !== id) {
             socket.emit('error', 'BAD REQUEST')
@@ -210,33 +226,25 @@ function checkPassword(msg, socket) {
     })
 }
 
-
 function addUser(roomName, id, nickName, pubKey, socket) {
     const tmp = []
     let ok = true;
     Room.find({ roomName: roomName }, (err, results) => {
         if (err) {
-            io.to(id).emit('errMsg', 'error on db, room not found')
+            io.to(id).emit('error', 'error on db, room not found')
         } else {
-            console.log(tmp)
             tmp.push(...results[0].roomUsers)
-            console.log(tmp)
-
             tmp.forEach(item => {
                 if (item.nickName === nickName) {
                     ok = false
                 }
             })
-            console.log(tmp)
-
             if (ok) {
                 tmp.push({
                     nickName: nickName,
                     id: id,
                     pubKey: pubKey
                 })
-            console.log('yo')
-
                 Room.updateOne({ roomName: roomName }, { roomUsers: tmp }, (err, results) => {
                     if (err) {
                         io.to(id).emit('errMsg', 'error while updating users list')
@@ -260,6 +268,32 @@ function addUser(roomName, id, nickName, pubKey, socket) {
         }
     })
 }
+
+function deleteUser(roomName, roomUsers, id) {
+    let newList = roomUsers.filter(item => item.id !== id)
+    Room.updateOne({roomName: roomName}, {roomUsers: newList}, (err, room) => {{
+        if (err) {
+            socket.emit('error', 'server error')
+        } else {
+            const listWithouID = newList.map((item) => {
+                return {
+                    nickName: item.nickName,
+                    pubKey: item.pubKey
+                }
+            })
+            io.to(roomName).emit('update user list', [...listWithouID])
+        }
+    }})
+}
+
+function deleteRoom(room) {
+    Room.deleteOne({roomName: room}, (err, room) => {
+        if (err) {
+            socket.emit('error', 'server error')
+        }
+    })
+}
+
 
 // io.on('connection', (socket) => {
 //     socket.on('chat message sent', (msg) => {
