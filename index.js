@@ -11,32 +11,32 @@ const cors = require('cors');
 
 ///////////////////////      LIVE        //////////////////////////
 
-// const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
-// const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
+const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
+const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
 
-// const http = require('https').Server({key: privKey, cert: cert}, app);
-// const io = require("socket.io")(http, 
+const http = require('https').Server({key: privKey, cert: cert}, app);
+const io = require("socket.io")(http, 
 
-// {
-// cors: {
-//     origin: "https://server1.cyrilmorin.fr",
-//     methods: ["GET", "POST"],
-//   }
-// })
+{
+cors: {
+    origin: "https://server1.cyrilmorin.fr",
+    methods: ["GET", "POST"],
+  }
+})
 
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////      LOCAL       ////////////////////////////////
 
-const http = require('http').Server(app)
-const io = require("socket.io")(http,
+// const http = require('http').Server(app)
+// const io = require("socket.io")(http,
 
-    {
-        cors: {
-            origin: "http://localhost:3000",
-            methods: ["GET", "POST"],
-        }
-    })
+//     {
+//         cors: {
+//             origin: "http://localhost:3000",
+//             methods: ["GET", "POST"],
+//         }
+//     })
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,6 +65,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 
 let requestList = []
+let counter = 0
 
 http.listen(port, () => {
     console.log(`Socket.IO server running at http://localhost:${port}/`);
@@ -95,6 +96,9 @@ io.on('connection', (socket) => {
                 })
             });
         });
+    })
+    socket.on('check connection', () => {
+        socket.emit('connection ok')
     })
     socket.on('get room list', () => {
         Room.find({}, (err, rooms) => {
@@ -181,6 +185,21 @@ io.on('connection', (socket) => {
         })
     })
     socket.on('disconnecting', () => {
+        Room.findOne({roomName: Array.from(socket.rooms)[1]}, (err, room) => {
+            if (err) {
+                socket.emit('error', 'server error')
+            } else if (room === null || Object.keys(room).length === 0) {
+                socket.emit('error', 'This room does not exist anymore')
+            } else {
+                if (room.roomOwner === socket.id){
+                    deleteRoom(room.roomName)
+                } else {
+                    deleteUser(room.roomName, room.roomUsers, socket.id)
+                }
+            }
+        })
+    })
+    socket.on('leave room', () => {
         Room.findOne({roomName: Array.from(socket.rooms)[1]}, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
