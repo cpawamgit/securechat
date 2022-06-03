@@ -11,32 +11,32 @@ const cors = require('cors');
 
 ///////////////////////      LIVE        //////////////////////////
 
-const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
-const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
+// const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
+// const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
 
-const http = require('https').Server({key: privKey, cert: cert}, app);
-const io = require("socket.io")(http, 
+// const http = require('https').Server({key: privKey, cert: cert}, app);
+// const io = require("socket.io")(http, 
 
-{
-cors: {
-    origin: "https://securechat.cyrilmorin.fr",
-    methods: ["GET", "POST"],
-  }
-})
+// {
+// cors: {
+//     origin: "https://securechat.cyrilmorin.fr",
+//     methods: ["GET", "POST"],
+//   }
+// })
 
 //////////////////////////////////////////////////////////////////////////
 
 ////////////////////      LOCAL       ////////////////////////////////
 
-// const http = require('http').Server(app)
-// const io = require("socket.io")(http,
+const http = require('http').Server(app)
+const io = require("socket.io")(http,
 
-//     {
-//         cors: {
-//             origin: "http://localhost:3000",
-//             methods: ["GET", "POST"],
-//         }
-//     })
+    {
+        cors: {
+            origin: "http://localhost:3000",
+            methods: ["GET", "POST"],
+        }
+    })
 
 
 //////////////////////////////////////////////////////////////////////////
