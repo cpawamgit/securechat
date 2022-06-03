@@ -11,32 +11,32 @@ const cors = require('cors');
 
 ///////////////////////      LIVE        //////////////////////////
 
-const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
-const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
+// const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
+// const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
 
-const http = require('https').Server({key: privKey, cert: cert}, app);
-const io = require("socket.io")(http, 
+// const http = require('https').Server({key: privKey, cert: cert}, app);
+// const io = require("socket.io")(http, 
 
-{
-cors: {
-    origin: "https://server1.cyrilmorin.fr",
-    methods: ["GET", "POST"],
-  }
-})
+// {
+// cors: {
+//     origin: "https://securechat.cyrilmorin.fr",
+//     methods: ["GET", "POST"],
+//   }
+// })
 
 //////////////////////////////////////////////////////////////////////////
 
-//////////////////////      LOCAL       ////////////////////////////////
+////////////////////      LOCAL       ////////////////////////////////
 
-// const http = require('http').Server(app)
-// const io = require("socket.io")(http,
+const http = require('http').Server(app)
+const io = require("socket.io")(http,
 
-//     {
-//         cors: {
-//             origin: "http://localhost:3000",
-//             methods: ["GET", "POST"],
-//         }
-//     })
+    {
+        cors: {
+            origin: "http://localhost:3000",
+            methods: ["GET", "POST"],
+        }
+    })
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -185,6 +185,7 @@ io.on('connection', (socket) => {
         })
     })
     socket.on('disconnecting', () => {
+        console.log(socket.id + "is disocnnecting\n\n\n\n\n\n\n")
         Room.findOne({roomName: Array.from(socket.rooms)[1]}, (err, room) => {
             if (err) {
                 socket.emit('error', 'server error')
