@@ -11,8 +11,8 @@ const cors = require('cors');
 
 ///////////////////////      LIVE        //////////////////////////
 
-const privKey = fs.readFileSync('/etc/nginx/ssl/privkey.pem');
-const cert = fs.readFileSync('/etc/nginx/ssl/fullchain.pem');
+const privKey = fs.readFileSync('/etc/letsencrypt/live/securechat.cyrilmorin.fr/privkey.pem');
+const cert = fs.readFileSync('/etc/letsencrypt/live/securechat.cyrilmorin.fr/fullchain.pem');
 
 const http = require('https').Server({key: privKey, cert: cert}, app);
 const io = require("socket.io")(http, 
@@ -42,7 +42,7 @@ cors: {
 //////////////////////////////////////////////////////////////////////////
 
 
-const port = process.env.PORT || 3002;
+const port = process.env.PORT || 3001;
 ////////////////////////
 ///////BCRYPT///////////
 ////////////////////////
