@@ -2,27 +2,21 @@
 ////////////////////////
 ///////SERVER///////////
 ////////////////////////
-const fs = require('fs');
 const express = require('express');
 const app = express();
 const cors = require('cors');
 
-
+app.use(cors());
 
 ///////////////////////      LIVE        //////////////////////////
 
-const privKey = fs.readFileSync('/etc/letsencrypt/live/securechat.cyrilmorin.fr/privkey.pem');
-const cert = fs.readFileSync('/etc/letsencrypt/live/securechat.cyrilmorin.fr/fullchain.pem');
-
-const http = require('https').Server({key: privKey, cert: cert}, app);
-const io = require("socket.io")(http, 
-
-{
-cors: {
-    origin: "https://securechat.cyrilmorin.fr",
-    methods: ["GET", "POST"],
-  }
-})
+const http = require('http').Server(app);
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "https://securechat.cyrilmorin.fr", // Keep this as https
+        methods: ["GET", "POST"],
+    }
+});
 
 //////////////////////////////////////////////////////////////////////////
 
